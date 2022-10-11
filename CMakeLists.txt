@@ -74,6 +74,7 @@ target_link_libraries(${project_name} pico_stdlib hardware_adc)
 # Add any user requested libraries
 target_link_libraries(${project_name}
         hardware_spi
+        hardware_timer
         hardware_dma
         hardware_pio
         pico_stdlib

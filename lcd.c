@@ -18,7 +18,7 @@
 #if (DISPLAY_RES == WQVGA)
 #define ZOOM 1
 #elif (DISPLAY_RES == WVGA)
-#define ZOOM 1
+#define ZOOM 0
 #endif 
 
 /* EXTERNALS ****************************************************************/
@@ -72,8 +72,15 @@ const uint LED_PIN = PICO_DEFAULT_LED_PIN;
 #define BUTTON_START 0x08
 #define REFRESH_GENERAL 0x17
 
-// display the currentTemp
-const char *currentTemp = "450";
+#define GAME_AREA_WIDTH 224
+#define GAME_AREA_HEIGHT 256
+
+// Offsets to centre on display ...
+#define DISPLAY_XOFF ((EVE_DISP_WIDTH - (GAME_AREA_WIDTH * ZOOM)) / 2)
+#define DISPLAY_YOFF ((EVE_DISP_HEIGHT - (GAME_AREA_HEIGHT * ZOOM)) / 2)
+
+// Bottom of game area.
+#define GAME_AREA_BOTTOM (GAME_AREA_HEIGHT - 18)
 
 volatile uint16_t updateTimer[1];
 
@@ -83,6 +90,7 @@ volatile uint16_t updateTimer[1];
 static void setup(void);
 static void led_state(uint8_t state);
 
+static void Draw_Bitmap(uint8_t handle, int16_t x, int16_t y);
 static void renderStartButton(void);
 
 /* EVE FUNCTIONS ************************************************************/
@@ -96,24 +104,25 @@ static void wait_for_button(uint8_t button)
 {
 	do
 	{
-		wait_ms(10);
+		wait_ms(200);
 
+			led_state(1);
+			
 		uint8_t tagTouch = HAL_MemRead8(EVE_REG_TOUCH_TAG);
 
 		if (tagTouch == button)
 		{
+			led_state(1);
+
 			break;
 		}
+
+	led_state(0);
+
 	} while (1);
+
 }
 
-static void wait_for_start()
-{
-	renderStartButton();
-
-	// wait until 'START' button is pressed and released ...
-	wait_for_button(BUTTON_START);
-}
 
 static void display_list_start()
 {
@@ -130,6 +139,27 @@ static void display_list_end()
 	EVE_LIB_EndCoProList();
 	EVE_LIB_AwaitCoProEmpty();
 }
+
+static void wait_for_start()
+{
+	// load the opening screen
+	eve_ui_load_jpg(img_startup_jpg, HANDLE_GUI_1_STARTUP, NULL, NULL);	
+
+	// get eve in command mode
+	display_list_start();
+		
+	Draw_Bitmap(HANDLE_GUI_1_STARTUP, 0, 0);
+
+	display_list_end();
+
+	// renderStartButton();
+	
+
+	
+	// wait until 'START' button is pressed and released ...
+	// wait_for_button(BUTTON_START);
+}
+
 
 // Draw a bitmap at the required location.
 static void Draw_Bitmap(uint8_t handle, int16_t x, int16_t y)
@@ -163,28 +193,29 @@ static inline void bitmap_draw(uint16_t xcrd, uint16_t ycrd, char hndl, char cel
 
 static void drawMainTemp()
 {
-
- 	int xcrd = 80;
+	// display the currentTemp
+	char *currentTemp = "450";	
+	int xcrd = 80;
 	int ycrd = 100;
 
 	do
 	{
 		bitmap_draw(xcrd, ycrd, FIXED_FONT, *currentTemp);
-		xcrd += 22;
-	
+		xcrd += 21;
+
 	} while (*++currentTemp != 0);
 
 }
 
 static void renderStartButton()
 {
-/* #if defined (EVE2_ENABLE) || defined (EVE3_ENABLE) || defined (EVE4_ENABLE)
+/* /* #if defined (EVE2_ENABLE) || defined (EVE3_ENABLE) || defined (EVE4_ENABLE)
 	EVE_VERTEX_TRANSLATE_X(0 << 4);
 	EVE_VERTEX_TRANSLATE_Y(0 << 4);
 #else
 	EVE_CMD_TRANSLATE(DISPLAY_XOFF << 16, DISPLAY_YOFF << 16);
 #endif // defined (EVE2_ENABLE) || defined (EVE3_ENABLE) || defined (EVE4_ENABLE)
- */
+
 	// Add invisible control buttons to display list ...
 	EVE_COLOR_MASK(0, 0, 0, 0);
 
@@ -193,23 +224,24 @@ static void renderStartButton()
 	EVE_BEGIN(EVE_BEGIN_RECTS);
 	EVE_TAG(BUTTON_START);
 	EVE_VERTEX2F(0, 0);
-	EVE_VERTEX2F(800, 480);
+	EVE_VERTEX2F(100, 100);
 
 	EVE_COLOR_MASK(255, 255, 255, 255);
+
+
+	EVE_END(); */
+
+
 }
 
 static void Draw_GUI_1()
 {
+	
 	// Draw the dashboard background.
 	Draw_Bitmap(HANDLE_GUI_1_BACKGROUND, 0, 0);
 
 	// draw a temp 
-	drawMainTemp();
-	
-	/* 
-
-	renderStartButton();
- */
+	// drawMainTemp();
 	
 }
 
@@ -233,6 +265,8 @@ static void cluster_draw(void)
 
 static void cluster_setup(void)
 {
+	eve_ui_load_jpg(img_background_jpg, HANDLE_GUI_1_BACKGROUND, NULL, NULL);		
+	
     EVE_LIB_BeginCoProList();
     EVE_CMD_DLSTART();
     EVE_DISPLAY();
@@ -240,9 +274,6 @@ static void cluster_setup(void)
     EVE_LIB_EndCoProList();
     EVE_LIB_AwaitCoProEmpty();
 	
-
-	eve_ui_load_jpg(img_startup_jpg, HANDLE_GUI_1_STARTUP, NULL, NULL);		
-	eve_ui_load_jpg(img_background_jpg, HANDLE_GUI_1_BACKGROUND, NULL, NULL);		
 	
 }
 
@@ -289,16 +320,13 @@ int main(void)
 
     /* Setup UART */
     setup();
-	
 	eve_ui_setup();
 	
-    /* Start example code */
-	cluster_setup();
-	
-	// Draw the dashboard background.
-	Draw_Bitmap(HANDLE_GUI_1_STARTUP, 0, 0);
+	wait_for_start();
+	sleep_ms(5000);
 
-	// wait_for_start();
+	cluster_setup();
+	//
 
     while (1)
     {			
