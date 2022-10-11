@@ -18,7 +18,7 @@
 #if (DISPLAY_RES == WQVGA)
 #define ZOOM 1
 #elif (DISPLAY_RES == WVGA)
-#define ZOOM 0
+#define ZOOM 1
 #endif 
 
 /* EXTERNALS ****************************************************************/
@@ -142,7 +142,7 @@ static void display_list_end()
 
 static void wait_for_start()
 {
-	// load the opening screen
+/* 	// load the opening screen
 	eve_ui_load_jpg(img_startup_jpg, HANDLE_GUI_1_STARTUP, NULL, NULL);	
 
 	// get eve in command mode
@@ -152,10 +152,8 @@ static void wait_for_start()
 
 	display_list_end();
 
+	 */
 	// renderStartButton();
-	
-
-	
 	// wait until 'START' button is pressed and released ...
 	// wait_for_button(BUTTON_START);
 }
@@ -194,7 +192,7 @@ static inline void bitmap_draw(uint16_t xcrd, uint16_t ycrd, char hndl, char cel
 static void drawMainTemp()
 {
 	// display the currentTemp
-	char *currentTemp = "450";	
+	const char *currentTemp = "450";	
 	int xcrd = 80;
 	int ycrd = 100;
 
@@ -205,6 +203,8 @@ static void drawMainTemp()
 
 	} while (*++currentTemp != 0);
 
+	xcrd = 80;
+	ycrd = 80;
 }
 
 static void renderStartButton()
@@ -241,7 +241,7 @@ static void Draw_GUI_1()
 	Draw_Bitmap(HANDLE_GUI_1_BACKGROUND, 0, 0);
 
 	// draw a temp 
-	// drawMainTemp();
+	drawMainTemp();
 	
 }
 
@@ -265,15 +265,16 @@ static void cluster_draw(void)
 
 static void cluster_setup(void)
 {
+		
 	eve_ui_load_jpg(img_background_jpg, HANDLE_GUI_1_BACKGROUND, NULL, NULL);		
-	
+
     EVE_LIB_BeginCoProList();
     EVE_CMD_DLSTART();
     EVE_DISPLAY();
     EVE_CMD_SWAP();
     EVE_LIB_EndCoProList();
     EVE_LIB_AwaitCoProEmpty();
-	
+
 	
 }
 
@@ -321,13 +322,23 @@ int main(void)
     /* Setup UART */
     setup();
 	eve_ui_setup();
-	
+	eve_ui_splash("Starting REC grill controller");
+
+	sleep_ms(2000);
 	wait_for_start();
-	sleep_ms(5000);
+
+	EVE_LIB_BeginCoProList();
+	EVE_CMD_DLSTART();
+	EVE_CLEAR_COLOR_RGB(0, 0, 0);
+	EVE_CLEAR(1,1,1);
+	EVE_COLOR_RGB(255, 255, 255);
+	EVE_DISPLAY();
+	EVE_CMD_SWAP();
+	EVE_LIB_EndCoProList();
+	EVE_LIB_AwaitCoProEmpty();
+
 
 	cluster_setup();
-	//
-
     while (1)
     {			
 		cluster_loop();
