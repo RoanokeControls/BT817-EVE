@@ -142,8 +142,8 @@ static void display_list_end()
 
 static void wait_for_start()
 {
-/* 	// load the opening screen
-	eve_ui_load_jpg(img_startup_jpg, HANDLE_GUI_1_STARTUP, NULL, NULL);	
+ 	// load the opening screen
+	uint32_t openingScreen = eve_ui_load_jpg(img_startup_jpg, HANDLE_GUI_1_STARTUP, NULL, NULL);	
 
 	// get eve in command mode
 	display_list_start();
@@ -152,7 +152,8 @@ static void wait_for_start()
 
 	display_list_end();
 
-	 */
+	free_ram_g(openingScreen);
+
 	// renderStartButton();
 	// wait until 'START' button is pressed and released ...
 	// wait_for_button(BUTTON_START);
@@ -209,12 +210,13 @@ static void drawMainTemp()
 
 static void renderStartButton()
 {
-/* /* #if defined (EVE2_ENABLE) || defined (EVE3_ENABLE) || defined (EVE4_ENABLE)
+ /* #if defined (EVE2_ENABLE) || defined (EVE3_ENABLE) || defined (EVE4_ENABLE)
 	EVE_VERTEX_TRANSLATE_X(0 << 4);
 	EVE_VERTEX_TRANSLATE_Y(0 << 4);
 #else
 	EVE_CMD_TRANSLATE(DISPLAY_XOFF << 16, DISPLAY_YOFF << 16);
 #endif // defined (EVE2_ENABLE) || defined (EVE3_ENABLE) || defined (EVE4_ENABLE)
+*/
 
 	// Add invisible control buttons to display list ...
 	EVE_COLOR_MASK(0, 0, 0, 0);
@@ -228,8 +230,7 @@ static void renderStartButton()
 
 	EVE_COLOR_MASK(255, 255, 255, 255);
 
-
-	EVE_END(); */
+	EVE_END(); 
 
 
 }
@@ -266,7 +267,7 @@ static void cluster_draw(void)
 static void cluster_setup(void)
 {
 		
-	eve_ui_load_jpg(img_background_jpg, HANDLE_GUI_1_BACKGROUND, NULL, NULL);		
+	uint32_t mainScreen = eve_ui_load_jpg(img_background_jpg, HANDLE_GUI_1_BACKGROUND, NULL, NULL);		
 
     EVE_LIB_BeginCoProList();
     EVE_CMD_DLSTART();
@@ -324,8 +325,8 @@ int main(void)
 	eve_ui_setup();
 	eve_ui_splash("Starting REC grill controller");
 
-	sleep_ms(2000);
 	wait_for_start();
+	sleep_ms(5000);
 
 	EVE_LIB_BeginCoProList();
 	EVE_CMD_DLSTART();
