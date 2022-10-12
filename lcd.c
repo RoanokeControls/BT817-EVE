@@ -104,25 +104,17 @@ static void wait_for_button(uint8_t button)
 {
 	do
 	{
-		wait_ms(200);
+		wait_ms(10);
 
-			led_state(1);
-			
 		uint8_t tagTouch = HAL_MemRead8(EVE_REG_TOUCH_TAG);
 
-		if (tagTouch == button)
+		if (tagTouch)
 		{
-			led_state(1);
-
 			break;
 		}
-
-	led_state(0);
-
 	} while (1);
 
 }
-
 
 static void display_list_start()
 {
@@ -152,13 +144,14 @@ static void wait_for_start()
 
 	display_list_end();
 
+	// renderStartButton();
+
 	free_ram_g(openingScreen);
 
-	// renderStartButton();
+	
 	// wait until 'START' button is pressed and released ...
 	// wait_for_button(BUTTON_START);
 }
-
 
 // Draw a bitmap at the required location.
 static void Draw_Bitmap(uint8_t handle, int16_t x, int16_t y)
@@ -210,23 +203,23 @@ static void drawMainTemp()
 
 static void renderStartButton()
 {
- /* #if defined (EVE2_ENABLE) || defined (EVE3_ENABLE) || defined (EVE4_ENABLE)
+ #if defined (EVE2_ENABLE) || defined (EVE3_ENABLE) || defined (EVE4_ENABLE)
 	EVE_VERTEX_TRANSLATE_X(0 << 4);
 	EVE_VERTEX_TRANSLATE_Y(0 << 4);
 #else
 	EVE_CMD_TRANSLATE(DISPLAY_XOFF << 16, DISPLAY_YOFF << 16);
 #endif // defined (EVE2_ENABLE) || defined (EVE3_ENABLE) || defined (EVE4_ENABLE)
-*/
+
 
 	// Add invisible control buttons to display list ...
-	EVE_COLOR_MASK(0, 0, 0, 0);
+	EVE_COLOR_MASK(255, 0, 0, 0);
 
 	EVE_CMD_FGCOLOR(0x880000);
 	EVE_CMD_GRADCOLOR(0xff0000);
 	EVE_BEGIN(EVE_BEGIN_RECTS);
 	EVE_TAG(BUTTON_START);
-	EVE_VERTEX2F(0, 0);
-	EVE_VERTEX2F(100, 100);
+	EVE_VERTEX2F(320, 240);
+	EVE_VERTEX2F(360, 280);
 
 	EVE_COLOR_MASK(255, 255, 255, 255);
 
@@ -246,10 +239,9 @@ static void Draw_GUI_1()
 	
 }
 
-
-
 static void cluster_draw(void)
 {
+	
 	EVE_LIB_BeginCoProList();
 	EVE_CMD_DLSTART();
 	EVE_CLEAR_COLOR_RGB(125, 125, 100);
@@ -269,14 +261,17 @@ static void cluster_setup(void)
 		
 	uint32_t mainScreen = eve_ui_load_jpg(img_background_jpg, HANDLE_GUI_1_BACKGROUND, NULL, NULL);		
 
-    EVE_LIB_BeginCoProList();
+	// Draw the dashboard background.
+	Draw_Bitmap(HANDLE_GUI_1_BACKGROUND, 0, 0);
+    
+	EVE_LIB_BeginCoProList();
     EVE_CMD_DLSTART();
     EVE_DISPLAY();
     EVE_CMD_SWAP();
     EVE_LIB_EndCoProList();
     EVE_LIB_AwaitCoProEmpty();
 
-	
+	cluster_draw();
 }
 
 static void cluster_loop(void)
@@ -331,18 +326,18 @@ int main(void)
 	EVE_LIB_BeginCoProList();
 	EVE_CMD_DLSTART();
 	EVE_CLEAR_COLOR_RGB(0, 0, 0);
-	EVE_CLEAR(1,1,1);
+	EVE_CLEAR(1, 1, 1);
 	EVE_COLOR_RGB(255, 255, 255);
+
 	EVE_DISPLAY();
 	EVE_CMD_SWAP();
 	EVE_LIB_EndCoProList();
 	EVE_LIB_AwaitCoProEmpty();
 
-
 	cluster_setup();
     while (1)
     {			
-		cluster_loop();
+		//cluster_loop();
     }
 
     // function never returns
