@@ -9,7 +9,7 @@ set(DISPLAY_RES WVGA)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-set(project_name "lcd_example")
+set(project_name "rp2040lcd")
 
 # Pull in Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
@@ -80,8 +80,5 @@ target_link_libraries(${project_name}
         pico_stdlib
         )
 
-pico_add_extra_outputs(${project_name})
-# Enable stdio on UART
-pico_enable_stdio_uart(${project_name} 0)
-# Enable stdio on USB
-pico_enable_stdio_usb(${project_name} 1)
+        pico_enable_stdio_usb(${PROJECT_NAME} 0)
+        pico_enable_stdio_uart(${PROJECT_NAME} 1)
